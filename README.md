@@ -1,17 +1,10 @@
-# Chat UI
+# 🦜 Go-Bulma Chat UI
 
-A sleek and intuitive chat user interface built with modern web technologies.
+A sleek and intuitive chat user interface built with Go, Bulma, and calls the `gemini-2.5` model 🤖.
 
 #### Don't forget your API key! 
 
 `export GEMINI_API_KEY="YOUR_API_KEY"`
-
-  <img 
-    src="https://github.com/user-attachments/assets/4f839f07-b2db-4630-99d1-504f781e0ea5"
-    alt="Image 1"
-    style="width: 48%; min-width: 260px; border-radius: 6px;"
-  />
-
 
 
 ## Features
@@ -25,10 +18,10 @@ A sleek and intuitive chat user interface built with modern web technologies.
 
 ## Technologies Used
 
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express, Socket.IO
-- **Database**: PostgreSQL
-- **Deployment**: Docker, Kubernetes
+- **Server**: Golang
+- **User Interface**: Bulma CSS
+- **Database**: None yet!
+- **Deployment**: Docker
 
 ## Getting Started
 
@@ -36,52 +29,41 @@ Follow these instructions to set up the project locally.
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
+- Go 1.25
 - Docker (optional, for containerized deployment)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/chat-ui.git
+   git clone https://github.com/whalelogic/bulmachat.git
    cd chat-ui
    ```
 
-2. Install frontend dependencies:
+2. Install dependencies:
    ```bash
-   cd frontend
-   npm install # or yarn
+   go mod download
    ```
 
-3. Install backend dependencies:
-   ```bash
-   cd ../backend
-   npm install # or yarn
-   ```
 
 ### Configuration
 
-1. Create a `.env` file in the `backend` directory based on `backend/.env.example`.
-2. Configure your database connection string and any other necessary environment variables.
+1. Create a `.env` file or simple `export GEMINI_API_KEY` in your shell (must be set).
+
 
 ### Running the Application
 
-#### Frontend
+
+#### Go Static File Server
 
 ```bash
-cd frontend
-npm start # or yarn start
+cd bulmachat
+go run main.go || go run .
 ```
-The frontend will typically run on `http://localhost:3000`.
 
-#### Backend
+The default port is `8080`.
 
-```bash
-cd backend
-npm start # or yarn start
-```
-The backend server will typically run on `http://localhost:5000`.
+Server is `http://localhost:8080`.
 
 ## Docker Deployment (Optional)
 
@@ -96,7 +78,7 @@ The backend server will typically run on `http://localhost:5000`.
 
 ## API Endpoints
 
-(Placeholder - add details about your API endpoints here, e.g., `/api/auth/login`, `/api/messages`)
+ // TODO: Define API endpoints, create html files and handlers, configure Auth
 
 ## Contributing
 
@@ -107,4 +89,12 @@ We welcome contributions! Please see our `CONTRIBUTING.md` for details.
 This project is licensed under the MIT License - see the `LICENSE` file for details.
 
 ---
-© 2023 [Your Name or Organization]
+© 2025 Keith Thomson
+
+
+  <img 
+    src="https://github.com/user-attachments/assets/4f839f07-b2db-4630-99d1-504f781e0ea5"
+    alt="Image 1"
+    style="width: 48%; min-width: 260px; border-radius: 6px;"
+  />
+
