@@ -6,6 +6,14 @@ A sleek and intuitive chat user interface built with modern web technologies.
 
 `export GEMINI_API_KEY="YOUR_API_KEY"`
 
+  <img 
+    src="https://github.com/user-attachments/assets/4f839f07-b2db-4630-99d1-504f781e0ea5"
+    alt="Image 1"
+    style="width: 48%; min-width: 260px; border-radius: 6px;"
+  />
+
+
+
 ## Features
 
 - Real-time messaging
