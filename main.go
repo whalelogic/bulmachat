@@ -1,129 +1,103 @@
-// Copyright 2023 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
 
-// Outyet is a web server that announces whether or not a particular Go version
-// has been tagged.
 package main
 
 import (
-	"expvar"
-	"flag"
+	"context"
+	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
-	"sync"
-	"time"
+	"os"
+
+	"google.golang.org/genai"
 )
 
-// Command-line flags.
-var (
-	httpAddr   = flag.String("addr", "0.0.0.0:8080", "Listen address")
-	pollPeriod = flag.Duration("poll", 5*time.Second, "Poll period")
-	version    = flag.String("version", "1.20", "Go version")
-)
-
-const baseChangeURL = "https://go.googlesource.com/go/+/"
+var apiKey string
 
 func main() {
-	flag.Parse()
-	changeURL := fmt.Sprintf("%sgo%s", baseChangeURL, *version)
-	http.Handle("/", NewServer(*version, changeURL, *pollPeriod))
-	log.Printf("serving http://%s", *httpAddr)
-	log.Fatal(http.ListenAndServe(*httpAddr, nil))
-}
-
-// Exported variables for monitoring the server.
-// These are exported via HTTP as a JSON object at /debug/vars.
-var (
-	hitCount       = expvar.NewInt("hitCount")
-	pollCount      = expvar.NewInt("pollCount")
-	pollError      = expvar.NewString("pollError")
-	pollErrorCount = expvar.NewInt("pollErrorCount")
-)
-
-// Server implements the outyet server.
-// It serves the user interface (it's an http.Handler)
-// and polls the remote repository for changes.
-type Server struct {
-	version string
-	url     string
-	period  time.Duration
-
-	mu  sync.RWMutex // protects the yes variable
-	yes bool
-}
-
-// NewServer returns an initialized outyet server.
-func NewServer(version, url string, period time.Duration) *Server {
-	s := &Server{version: version, url: url, period: period}
-	go s.poll()
-	return s
-}
-
-// poll polls the change URL for the specified period until the tag exists.
-// Then it sets the Server's yes field true and exits.
-func (s *Server) poll() {
-	for !isTagged(s.url) {
-		pollSleep(s.period)
+	apiKey = os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		log.Fatal("GEMINI_API_KEY environment variable is required")
 	}
-	s.mu.Lock()
-	s.yes = true
-	s.mu.Unlock()
-	pollDone()
+
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "index.html")
+	})
+
+	http.HandleFunc("/chat", chatHandler)
+
+	log.Println("Listening on :8080...")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 }
 
-// Hooks that may be overridden for integration tests.
-var (
-	pollSleep = time.Sleep
-	pollDone  = func() {}
-)
+func chatHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Received %s request to /chat from %s", r.Method, r.RemoteAddr)
+	
+	if r.Method != http.MethodPost {
+		log.Printf("Method not allowed: %s", r.Method)
+		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-// isTagged makes an HTTP HEAD request to the given URL and reports whether it
-// returned a 200 OK response.
-func isTagged(url string) bool {
-	pollCount.Add(1)
-	r, err := http.Head(url)
+	log.Printf("Content-Type: %s, Content-Length: %d", r.Header.Get("Content-Type"), r.ContentLength)
+
+	var reqBody struct {
+		Message string `json:"message"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		log.Printf("Error decoding request body: %v", err)
+		http.Error(w, "Error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Received message: %q (length: %d)", reqBody.Message, len(reqBody.Message))
+
+	ctx := context.Background()
+	log.Println("Creating Gemini client...")
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{
+		APIKey: apiKey,
+	})
 	if err != nil {
-		log.Print(err)
-		pollError.Set(err.Error())
-		pollErrorCount.Add(1)
-		return false
+		log.Printf("Error creating Gemini client: %v", err)
+		http.Error(w, fmt.Sprintf("Error creating Gemini client: %v", err), http.StatusInternalServerError)
+		return
 	}
-	return r.StatusCode == http.StatusOK
-}
 
-// ServeHTTP implements the HTTP user interface.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	hitCount.Add(1)
-	s.mu.RLock()
-	data := struct {
-		URL     string
-		Version string
-		Yes     bool
-	}{
-		s.url,
-		s.version,
-		s.yes,
-	}
-	s.mu.RUnlock()
-	err := tmpl.Execute(w, data)
+	log.Println("Sending request to Gemini API...")
+	resp, err := client.Models.GenerateContent(ctx, "gemini-2.5-pro", genai.Text(reqBody.Message), nil)
 	if err != nil {
-		log.Print(err)
+		log.Printf("Error sending message to Gemini: %v", err)
+		http.Error(w, fmt.Sprintf("Error sending message to Gemini: %v", err), http.StatusInternalServerError)
+		return
 	}
-}
 
-// tmpl is the HTML template that drives the user interface.
-var tmpl = template.Must(template.New("tmpl").Parse(`
-<!DOCTYPE html><html><body><center>
-	<h2>Is Go {{.Version}} out yet?</h2>
-	<h1>
-	{{if .Yes}}
-		<a href="{{.URL}}">YES!</a>
-	{{else}}
-		No. :-(
-	{{end}}
-	</h1>
-</center></body></html>
-`))
+	log.Printf("Received response from Gemini with %d candidates", len(resp.Candidates))
+
+	var reply string
+	for _, cand := range resp.Candidates {
+		if cand.Content != nil {
+			for _, part := range cand.Content.Parts {
+				if part.Text != "" {
+					reply += part.Text
+				}
+			}
+		}
+	}
+
+	log.Printf("Generated reply (length: %d): %q", len(reply), reply)
+
+	if err := json.NewEncoder(w).Encode(struct {
+		Reply string `json:"reply"`
+	}{Reply: reply}); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		return
+	}
+	
+	log.Println("Successfully sent response to client")
+}

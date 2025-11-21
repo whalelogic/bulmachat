@@ -21,7 +21,7 @@ func (h *statusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestIsTagged(t *testing.T) {
-	// Set up a fake "Google Code" web server reporting 404 not found.
+	// Set up a fake web server responding with 404.
 	status := statusHandler(http.StatusNotFound)
 	s := httptest.NewServer(&status)
 	defer s.Close()

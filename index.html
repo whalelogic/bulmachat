@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en" class="has-background-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/marked-highlight@2.0.1/lib/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <section class="hero is-dark is-fullheight">
+        <div class="hero-head">
+            <nav class="navbar is-dark">
+                <div class="navbar-brand">
+                    <div class="navbar-item">
+                        <span class="icon-text">
+                            <span class="icon has-text-primary">
+                                <i class="fas fa-robot fa-lg"></i>
+                            </span>
+                            <span class="title is-4 has-text-light ml-2">Gemini Chat</span>
+                        </span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <div class="hero-body p-0">
+            <div class="container is-fluid px-4">
+                <div class="columns is-gapless chat-container">
+                    <div class="column is-3 sidebar-column">
+                        <aside class="menu box has-background-dark-ter p-4">
+                            <p class="menu-label has-text-light">
+                                <span class="icon-text">
+                                    <span class="icon">
+                                        <i class="fas fa-history"></i>
+                                    </span>
+                                    <span>Chat History</span>
+                                </span>
+                            </p>
+                            <ul class="menu-list" id="previous-chats">
+                                <li><a class="has-text-grey-light">No previous chats</a></li>
+                            </ul>
+                        </aside>
+                    </div>
+
+                    <div class="column chat-column">
+                        <div class="box has-background-dark-ter chat-box">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="has-text-centered has-text-grey-light p-6">
+                                    <span class="icon is-large">
+                                        <i class="fas fa-comments fa-3x"></i>
+                                    </span>
+                                    <p class="mt-3">Start a conversation with Gemini</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="box has-background-dark-ter chat-input-box">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input 
+                                        class="input is-dark" 
+                                        type="text" 
+                                        id="message-input" 
+                                        placeholder="Type your message...">
+                                </div>
+                                <div class="control">
+                                    <button class="button is-primary" id="send-button">
+                                        <span class="icon">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </span>
+                                        <span>Send</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="/static/script.js"></script>
+</body>
+</html>
