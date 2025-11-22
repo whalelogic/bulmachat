@@ -90,11 +90,5 @@ This project is licensed under the MIT License - see the `LICENSE` file for deta
 
 ---
 © 2025 Keith Thomson
-
-
-  <img 
-    src="https://github.com/user-attachments/assets/4f839f07-b2db-4630-99d1-504f781e0ea5"
-    alt="Image 1"
-    style="width: 48%; min-width: 260px; border-radius: 6px;"
-  />
+<img width="1229" height="840" alt="image" src="https://github.com/user-attachments/assets/2e14d01b-7472-486d-a6a2-35ce51118da1" />
 
